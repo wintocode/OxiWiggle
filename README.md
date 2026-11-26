@@ -8,10 +8,10 @@ You can also mix four tracks side by side, control the Arranger and launch scene
 
 1. Connect the E16 over USB. If you’re starting from a clone of this repository, [build the extension](#build-from-source) to get `build/OxiWiggle.bwextension`.
 2. Drag `OxiWiggle.bwextension` onto Bitwig Studio. On macOS you can also quit Bitwig, copy the file to `~/Documents/Bitwig Studio/Extensions/`, then reopen Bitwig.
-3. Open **Settings → Controllers**. If OxiWiggle hasn’t appeared automatically, add it under **OXI Instruments**. Choose the entry labelled **OxiWiggle**. On macOS, select **OXI E16 Port 1** for both MIDI input and MIDI output if the selectors are empty. Use just one controller integration for that pair.
+3. Open **Settings → Controllers**. On the tested macOS setup, connecting the E16 automatically added **OXI Instruments E16 (OxiWiggle)** and filled both port selectors. If the entry is missing, add **OxiWiggle** under **OXI Instruments**. On macOS, select **OXI E16 Port 1** for both MIDI input and MIDI output if the selectors are empty. Use just one controller integration for that pair.
 4. The E16 briefly shows **OxiWiggle by wintoid** and the version, then opens in Device mode. Select a device with a populated Remote Controls page and turn knob 1. Its first parameter should move in Bitwig.
 
-The hardware setup used during development was macOS, Bitwig Studio 6.1.7 and E16 firmware 1.3.1 (hardware V5). The extension requires Bitwig Controller API 25. Automatic macOS port assignment and the full Transport and Launcher mappings still await detailed hardware checks. [Hardware test notes](docs/hardware-tests/)
+The hardware setup used during development was macOS, Bitwig Studio 6.1.7 and E16 firmware 1.3.1 (hardware V5). The extension requires Bitwig Controller API 25. The full Transport and Launcher mappings still await detailed hardware checks. [Hardware test notes](docs/hardware-tests/)
 
 ## Finding your way around
 
