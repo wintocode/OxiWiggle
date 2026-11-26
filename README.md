@@ -1,29 +1,69 @@
 # OxiWiggle
 
-OxiWiggle is a Java controller extension for the OXI E16 and Bitwig Studio. The hardware-tested checkpoint is `0.0.41-oled-text`. In the `0.0.48-name` candidate, turn knob 16 to move through Device, Mixer, Transport, Launcher and About. Turn knob 15 to select tracks on every page, or click it to expand or collapse a group. [OLED check and checkpoint SHA-256](docs/hardware-tests/m5.md#0041-oled-text) · [Mixer hardware checks](docs/hardware-tests/mixer.md)
+OxiWiggle by **wintoid** turns the OXI E16 into a control surface for Bitwig Studio. Select a device in Bitwig and its Remote Controls appear on the E16, with names on the OLED and values on the LED rings. Turn a knob to edit the parameter, or move it in Bitwig and watch the ring follow.
 
-On connection, the OLED shows **OxiWiggle**, **by wintoid** and the running version for 1.5 seconds. The first turn or press dismisses the welcome screen and performs its usual action. Turn knob 16 fully clockwise to **About** to see the same information again. [Welcome and About hardware check](docs/superpowers/specs/2026-11-25-welcome-about-design.md#acceptance)
+You can also mix four tracks side by side, control the Arranger and launch scenes in banks of eight. OxiWiggle runs inside Bitwig as a Java controller extension and uses the E16’s built-in Remote Mode. All installation happens on the computer.
 
-**Device:** Knobs 1–8 edit the selected device’s Remote Controls. Knobs 13 and 14 select pages and devices. The OLED shows eight names in two rows of four and shows the parameter name and value while you turn.
+## Installation
 
-**Mixer:** Each of the four columns controls one track. The top row turns volume, Shift-turns pan and clicks mute. The middle row turns send amount, Shift-turns send selection and clicks solo. Click the third row to arm. The window follows track selection until it reaches the last four tracks.
+1. Connect the E16 over USB. If you’re starting from a clone of this repository, [build the extension](#build-from-source) to get `build/OxiWiggle.bwextension`.
+2. Drag `OxiWiggle.bwextension` onto Bitwig Studio. On macOS you can also quit Bitwig, copy the file to `~/Documents/Bitwig Studio/Extensions/`, then reopen Bitwig.
+3. Open **Settings → Controllers**. If OxiWiggle hasn’t appeared automatically, add it under **OXI Instruments**. Choose the entry labelled **OxiWiggle**. On macOS, select **OXI E16 Port 1** for both MIDI input and MIDI output if the selectors are empty. Use just one controller integration for that pair.
+4. The E16 briefly shows **OxiWiggle by wintoid** and the version, then opens in Device mode. Select a device with a populated Remote Controls page and turn knob 1. Its first parameter should move in Bitwig.
 
-**Launcher** shows eight scene names in two rows of four. Press knobs 1–8 to launch a scene. Turn 13 to change pages. [Hardware trial](docs/hardware-tests/launcher.md)
+The hardware setup used during development was macOS, Bitwig Studio 6.1.7 and E16 firmware 1.3.1 (hardware V5). The extension requires Bitwig Controller API 25. Automatic macOS port assignment and the full Transport and Launcher mappings still await detailed hardware checks. [Hardware test notes](docs/hardware-tests/)
 
-**Transport** controls Arranger playback, recording, cues, looping, tempo and the metronome. The OLED shows position, tempo and playback state. [Control map and pending hardware checks](docs/hardware-tests/transport.md)
+## Finding your way around
 
-OxiWiggle is an in-progress native Bitwig controller extension for the OXI E16. The M0 load/lifecycle and M1 entry, native-label and LED-ring checkpoints were observed on Bitwig 6.1.7/API 25 and E16 SW 1.3.1/HW V5. The reviewed `0.0.3-m1` build passed the user's display and normal-exit recheck on 2026-11-23. Remote Mode also worked with changed normal scene knob/button assignments and preserved them on exit, supporting use of the extension without an accompanying E16 scene. Starting Bitwig while the E16 was unplugged and reconnecting it worked without manual re-enabling. A recorded instrument clip stayed empty while encoder 1 moved and the extension sent exit and fresh display messages. Explicitly unassigned-output and duplicate-route checks remain in the M1 hardware log.
+The two rightmost knobs on the bottom row work the same way in every mode. **Turn 15 to select a track**, or press it to expand or collapse a selected group. **Turn 16 to select a mode**, clockwise through Device, Mixer, Transport, Launcher and About. Turn it fully left to return to Device or fully right to see the installed version.
 
-## Build
+### Device
 
-The build uses JDK 21 and Bitwig Controller API 25. It requires no Gradle, Maven or runtime libraries. Obtain the API JAR from the URL in `dependencies/bitwig-api-25.properties` and put it at `.deps/extension-api-25.jar`. Use the recorded JDK version or update the provenance file after verifying another JDK 21 distribution. The scripts verify the JDK version and API JAR checksum; they do not download anything.
+Turn knobs **1–8** to edit the eight Remote Controls in the order shown on the OLED. While you turn, the display shows the parameter name and formatted value. Turn slowly for fine adjustments or quickly for larger sweeps. For parameters that Bitwig identifies as a list of choices, slow turns let you select adjacent entries.
+
+Turn **13** to change the Remote Controls page and **14** to change the device on the selected track.
+
+### Mixer
+
+Each physical column controls the track named above it on the OLED. For example, knobs **1, 5 and 9** all act on the leftmost displayed track. The four-track window follows track selection, so the selected track can sit anywhere in the window.
+
+| Row | Turn | Hold Shift and turn | Press |
+| --- | --- | --- | --- |
+| 1–4 | Volume | Pan | Mute |
+| 5–8 | Send level | Choose send | Solo |
+| 9–12 | | | Record arm |
+
+### Transport
+
+| Knob | Turn | Press | With Shift |
+| --- | --- | --- | --- |
+| 1–4 | | Play, stop, Arranger record, restart (in order) | |
+| 5 | Jog by bar | | Turn to jog by beat |
+| 6 | Select cue | Add cue | |
+| 7 | Move loop start | Toggle Arranger loop | |
+| 8 | Change loop length | | |
+| 9 | Adjust tempo by 1 BPM | Tap tempo | |
+| 10 | Metronome volume | Toggle metronome | |
+| 11 | | Toggle Arranger overdub | Press for punch in |
+| 12 | | Toggle Arranger automation write | Press for punch out |
+
+### Launcher
+
+Press **1–8** to launch the scene in the matching OLED slot. Turn **13** to page through banks of eight. To launch scene 9 from the first bank, turn 13 one step clockwise, then press 1. Paging alone leaves playback running.
+
+## Build from source
+
+The build scripts use a JDK and Bitwig’s API JAR. The current compiler check expects `javac 21.0.13.1`. Download the JAR from Bitwig using the source URL in the [API dependency record](dependencies/bitwig-api-25.properties) and save it as `.deps/extension-api-25.jar` in the repository (create the `.deps` directory first). The [JDK record](dependencies/jdk-21.properties) identifies the compiler used for the macOS build.
+
+From the repository root, set `OXIWIGGLE_JDK` to your JDK home and run the build. This example uses Homebrew on Apple Silicon.
 
 ```sh
 export OXIWIGGLE_JDK=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
-sh scripts/test.sh
 sh scripts/build.sh
 ```
 
-The output is `build/OxiWiggle.bwextension`. Install it by dragging it onto Bitwig, or copy it to `~/Documents/Bitwig Studio/Extensions/OxiWiggle.bwextension`. Add OxiWiggle under Controllers and manually select the matching E16 USB Port 1 input and output. The diagnostic display test is in `docs/hardware-tests/m1.md`. The Controller Script Console can be opened by assigning a shortcut to `Show Control Script Console` in Bitwig's Dashboard → Settings → Shortcuts. The speech-bubble icon on the controller entry toggles on-screen controller visualizations; it does not open the console.
+The script verifies the compiler version and JAR checksum, runs all four test suites, and writes `build/OxiWiggle.bwextension`. To run the tests on their own, use `sh scripts/test.sh`.
 
-The MIT license covers OxiWiggle's own code. See the [development references](docs/sources.md) for publisher documentation.
+## Licence
+
+OxiWiggle is [MIT licensed](LICENSE). Bitwig and OXI publish their own [developer references](docs/sources.md).
