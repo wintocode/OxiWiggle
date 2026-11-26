@@ -1,0 +1,10 @@
+.deps/
+.toolchains/
+.superpowers/
+.worktrees/
+build/
+*.class
+
+# Local copies of vendor documentation and build inputs
+/docs/reference/
+*.jar
