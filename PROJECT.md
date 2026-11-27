@@ -26,7 +26,7 @@ OxiWiggle is a proposed native **Bitwig Studio controller extension** for the **
 | 15 | Select track, click to toggle group expansion | Same | Same |
 | 16 | Select mode | Same | Same |
 
-Launcher follows Transport on encoder 16. Press 1–8 to launch the corresponding visible scene, turn 13 for the previous or next eight scenes, and use 15 for track selection. [Launcher design](docs/superpowers/specs/2026-11-25-launcher-design.md)
+Launcher follows Transport on encoder 16. Press 1–8 to launch the corresponding visible scene, press 9 to stop playback, Shift-press 1–8 to record empty slots on armed tracks, turn 13 to scroll one scene (Shift-turn for up to eight, stopping at the last full window), and use 15 for track selection. Press 16 from any mode to display About and the extension version. Any button press closes About and restores the current mode. Transport displays the Bitwig playhead in bars, beats, subdivisions and ticks. [Launcher design](docs/superpowers/specs/2026-11-25-launcher-design.md)
 
 **`PERFORM`** is the user's preferred name for a standard eight-control performance page, **not** a page name that OxiWiggle must hard-code. OxiWiggle should follow ordinary Bitwig Remote Controls pages and investigate whether a button can jump to a named page.
 

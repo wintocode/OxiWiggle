@@ -75,9 +75,9 @@ Only after this works should the implementation advance to parameter bindings an
 
 ## Current controller mapping
 
-- Knob 16 selects Device, Mixer, Transport or Launcher. Knob 15 selects tracks on every page and its click toggles group expansion.
+- Knob 16 selects Device, Mixer, Transport or Launcher. Its press opens About and any button press dismisses it. Knob 15 selects tracks on every page and its click toggles group expansion.
 - Device uses knobs 1–8 for Remote Controls, 13 for pages and 14 for devices. Knobs 9–12 are spare in Device.
-- Launcher shows eight scenes at a time. Press 1–8 to launch and turn 13 to page.
+- Launcher shows eight scenes at a time. Press 1–8 to launch, press 9 to stop playback and Shift-press 1–8 to record empty slots on armed tracks. Turn 13 to scroll by one scene or Shift-turn to jump up to eight. Clamp at the last full window.
 - Transport uses knobs 1–12 for Arranger controls. Shift-click 11/12 toggles punch in/out. See `docs/hardware-tests/transport.md` for the complete map.
 - Mixer uses four track columns. The top row turns volume, Shift-turns pan and clicks mute. The middle row turns send amount, Shift-turns send selection and clicks solo. Third-row clicks arm tracks.
 - The current OLED uses a 128×64 framebuffer. The native-label command belongs to the M1 proof of concept.
@@ -85,6 +85,8 @@ Only after this works should the implementation advance to parameter bindings an
 The user's preferred page name `PERFORM` is a convention, **not a hard-coded dependency**.
 
 ## Validation and release quality
+
+- Update the README and relevant mapping and hardware notes with each user-facing change. For a public release, attach the tested `OxiWiggle.bwextension` to the matching GitHub release so the README download link serves that build.
 
 - Unit-test protocol framing and parsing, relative CC decoding, parameter clamping, and four-character label windows where possible.
 - Test Bitwig mouse edits, automation playback/recording, another controller changing the same parameters, selection changes, empty slots, device chains, reconnects, and shutdown.

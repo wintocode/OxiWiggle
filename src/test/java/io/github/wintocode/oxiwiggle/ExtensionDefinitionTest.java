@@ -10,7 +10,7 @@ public final class ExtensionDefinitionTest {
         Checks.that(definition.getAuthor().equals("wintocode"), "author");
         Checks.that(definition.getHardwareVendor().equals("OXI Instruments"), "vendor");
         Checks.that(definition.getHardwareModel().equals("E16 (OxiWiggle)"), "model");
-        Checks.that(definition.getVersion().equals("0.0.49-port-pair"), "version");
+        Checks.that(definition.getVersion().equals("0.0.56-about-click"), "version");
         Checks.equal(25, definition.getRequiredAPIVersion());
         Checks.equal(1, definition.getNumMidiInPorts());
         Checks.equal(1, definition.getNumMidiOutPorts());

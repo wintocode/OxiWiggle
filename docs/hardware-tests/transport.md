@@ -1,8 +1,14 @@
 # Transport trial · 0.0.43-transport
 
-Hardware verification pending. The reference setup is Bitwig Studio 6.1.7, Controller API 25, E16 SW 1.3.1 and HW V5. Record the actual versions when running the trial. The preceding 0.0.42 fast-turn trial has its own checkpoint.
+On 0.0.49-port-pair, Simon confirmed that pressing knob 1 started Bitwig playback, the E16 position display advanced during playback, and pressing knob 2 stopped it. The reference setup is Bitwig Studio 6.1.7, Controller API 25, E16 SW 1.3.1 and HW V5.
+
+On 0.0.50-transport-position, Simon tried the four-field playhead display and preferred it to the previous bar-and-beat readout.
 
 ## Controls
+
+With playback stopped on 0.0.49-port-pair, Simon confirmed that pressing knob 11 toggled Arranger overdub and pressing knob 12 toggled Arranger automation write independently.
+Holding Shift and pressing 11 twice toggled Punch In on and off. Shift with 12 did the same for Punch Out. Each punch switch operated independently, and both unshifted settings retained their values.
+With Shift held, Simon toggled each punch switch on and off in Bitwig with the mouse. Ring 11 followed Punch In and ring 12 followed Punch Out.
 
 | Knob | Turn | Click | Shift |
 | --- | --- | --- | --- |

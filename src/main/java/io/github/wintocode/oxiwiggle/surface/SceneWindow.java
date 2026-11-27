@@ -6,5 +6,7 @@ public interface SceneWindow {
     void scrollTo(int first);
     /** Returns null while the scene is absent from the observed window. */
     String name(int sceneIndex);
+    /** Returns an optional status message for the display. */
+    String record(int sceneIndex);
     void launch(int sceneIndex);
 }

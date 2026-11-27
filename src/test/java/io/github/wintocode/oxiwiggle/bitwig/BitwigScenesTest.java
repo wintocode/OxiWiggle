@@ -16,16 +16,50 @@ public final class BitwigScenesTest {
             case "launch" -> launched.add((int) args[0]);
             default -> throw new AssertionError(method);
         });
-        ControllerHost host = stub(ControllerHost.class, (proxy, method, args) -> {
-            Checks.that(method.getName().equals("createSceneBank") && (int) args[0] == 8, "scene bank size");
-            return bank;
+        var recorded = new ArrayList<Integer>();
+        TrackBank tracks = stub(TrackBank.class, (proxy, method, args) -> switch (method.getName()) {
+            case "sceneBank" -> bank;
+            case "itemCount" -> stub(IntegerValue.class, (p, m, a) -> 4);
+            case "getItemAt" -> recordingTrack((int) args[0], recorded);
+            default -> throw new AssertionError(method);
         });
+        Track root = stub(Track.class, (p, m, a) -> tracks);
+        Project project = stub(Project.class, (p, m, a) -> root);
+        ControllerHost host = stub(ControllerHost.class, (p, m, a) -> project);
         var scenes = new BitwigScenes(host);
         Checks.that("Outro".equals(scenes.name(10)) && scenes.name(11) == null, "partial page names");
+        Checks.that(scenes.record(8).equals("R1 Record requested") && recorded.equals(List.of(0, 3)), "record empty armed slots");
+        Checks.that(scenes.record(11).equals("R2 Scene unavailable"), "missing scene");
         scenes.launch(8);
         scenes.launch(10);
         scenes.launch(11);
         Checks.that(launched.equals(List.of(5, 7)), "launch uses the observed bank slot");
+    }
+
+    private static Track recordingTrack(int track, List<Integer> recorded) {
+        var slot = stub(ClipLauncherSlot.class, (proxy, method, args) -> switch (method.getName()) {
+            case "exists" -> flag(true);
+            case "hasContent" -> flag(track == 1);
+            case "isRecording", "isRecordingQueued" -> flag(false);
+            case "sceneIndex" -> stub(IntegerValue.class, (p, m, a) -> 8);
+            case "record" -> recorded.add(track);
+            default -> throw new AssertionError(method);
+        });
+        var slots = stub(ClipLauncherSlotBank.class, (p, m, a) -> {
+            Checks.that((int) a[0] == 5, "record uses observed scene offset");
+            return slot;
+        });
+        return stub(Track.class, (proxy, method, args) -> switch (method.getName()) {
+            case "exists" -> flag(true);
+            case "name" -> stub(SettableStringValue.class, (p, m, a) -> "Track " + track);
+            case "arm" -> stub(SettableBooleanValue.class, (p, m, a) -> track != 2);
+            case "clipLauncherSlotBank" -> slots;
+            default -> throw new AssertionError(method);
+        });
+    }
+
+    private static BooleanValue flag(boolean value) {
+        return stub(BooleanValue.class, (p, m, a) -> value);
     }
 
     private static Scene scene(int index) {

@@ -26,7 +26,7 @@ public final class RemoteSession {
     private static final long NANOS_PER_MILLI = 1_000_000;
     private static final int MIXER_COLUMNS = MixerBank.COLUMN_COUNT;
     private static final int MIXER_TRACK_BUTTONS = 3 * MIXER_COLUMNS;
-    private enum Mode { DEVICE, MIXER, TRANSPORT, LAUNCHER, ABOUT }
+    private enum Mode { DEVICE, MIXER, TRANSPORT, LAUNCHER }
     private static final int PAGE_RING_INDEX = 12;
     private static final int DEVICE_RING_INDEX = 13;
     private static final int TRACK_RING_INDEX = 14;
@@ -34,7 +34,7 @@ public final class RemoteSession {
     private static final int NAVIGATION_RING_SEGMENTS = 16;
     private static final int NAVIGATION_RING_PURPLE = 0x070316;
     private static final int NAVIGATION_RING_ORANGE = 0x160502;
-    private enum View { CONTROLS, PARAMETER, DEVICE, TRACK, LOOP }
+    private enum View { CONTROLS, PARAMETER, DEVICE, TRACK, RECORD_NOTICE, LOOP }
     private record Selection(View view, String name, String value) {
         Selection(View view, String name) { this(view, name, ""); }
         byte[] render() {
@@ -60,7 +60,10 @@ public final class RemoteSession {
     private final SceneWindow scenes;
     private final byte[] aboutPixels;
     private boolean welcome;
-    private int scenePage;
+    private boolean aboutOpen;
+    private final boolean[] consumedPress = new boolean[17];
+    private int firstScene;
+    private String recordNotice = "";
     private final String[] shownScenes = new String[SceneWindow.SIZE];
     private Mode mode = Mode.DEVICE;
     private Mode renderedMode;
@@ -219,6 +222,22 @@ public final class RemoteSession {
         boolean press = status == 0x90 && data1 >= 0 && data1 <= 16 && data2 > 0;
         if (turn || press) dismissWelcome();
         boolean note = status == 0x90 || status == 0x80;
+        if (note && data1 >= 0 && data1 < consumedPress.length) {
+            if (consumedPress[data1]) {
+                if (!press) consumedPress[data1] = false;
+                return;
+            }
+            if (press && (aboutOpen || data1 == MODE_RING_INDEX)) {
+                if ((data1 < controlButtonsHeld.length && controlButtonsHeld[data1])
+                        || (data1 == TRACK_RING_INDEX && trackButtonHeld) || (data1 == 16 && shiftHeld)) return;
+                consumedPress[data1] = true;
+                aboutOpen = !aboutOpen;
+                Arrays.fill(pendingMixerClicks, null);
+                onSlotChanged();
+                return;
+            }
+        }
+        if (aboutOpen && turn) return;
         if (note && data1 == 16) {
             boolean shifted = status == 0x90 && data2 > 0;
             if (shiftHeld != shifted) {
@@ -250,7 +269,6 @@ public final class RemoteSession {
             navigateTrack(Integer.signum(delta));
             return;
         }
-        if (mode == Mode.ABOUT) return;
         if (mode == Mode.MIXER) {
             if (status == 0xb0 && data1 >= 1 && data1 <= MIXER_TRACK_BUTTONS) {
                 int index = data1 - 1;
@@ -263,7 +281,7 @@ public final class RemoteSession {
         if (mode == Mode.LAUNCHER) {
             if (status == 0xb0 && data1 == PAGE_RING_INDEX + 1) {
                 view = View.CONTROLS;
-                setScenePage(scenePage + Integer.signum(delta));
+                setFirstScene(firstScene + Integer.signum(delta) * (shiftHeld ? SceneWindow.SIZE : 1));
                 onSlotChanged();
             }
             return;
@@ -312,9 +330,21 @@ public final class RemoteSession {
             return;
         }
         if (mode == Mode.LAUNCHER) {
+            if (pressed && index == 8) clickTransport(2);
             if (pressed && index < SceneWindow.SIZE && shownScenes[index] != null) {
-                int target = scenePage * SceneWindow.SIZE + index;
-                if (target < scenes.count() && shownScenes[index].equals(scenes.name(target))) scenes.launch(target);
+                int target = firstScene + index;
+                if (target < scenes.count() && shownScenes[index].equals(scenes.name(target))) {
+                    if (shiftHeld) {
+                        recordNotice = scenes.record(target);
+                        if (!recordNotice.isEmpty()) {
+                            view = View.RECORD_NOTICE;
+                            navigationDeadline = nanoTime.getAsLong() + NAVIGATION_IDLE_MILLIS * NANOS_PER_MILLI;
+                            refreshNavigationView(generation);
+                        }
+                    } else {
+                        scenes.launch(target);
+                    }
+                }
             }
             return;
         }
@@ -437,7 +467,7 @@ public final class RemoteSession {
         if (next == mode) return;
         Arrays.fill(shownScenes, null);
         mode = next;
-        if (next == Mode.LAUNCHER) scenes.scrollTo(scenePage * SceneWindow.SIZE);
+        if (next == Mode.LAUNCHER) scenes.scrollTo(firstScene);
         view = View.CONTROLS;
         onMixerTargetChanged();
     }
@@ -602,12 +632,8 @@ public final class RemoteSession {
                 if (renderedMode != null && activeMode == Mode.DEVICE) nextDeviceRingToClear = 8;
                 renderedMode = activeMode;
             }
-            if (activeMode == Mode.ABOUT) {
-                if (!sendScreen(aboutPixels, token)) return;
-                for (int i = 0; i < MIXER_TRACK_BUTTONS; i++) {
-                    if (!sendFeedbackRing(i, switchRing(false, false, 0), token)) return;
-                }
-                sendBottomRow(activeMode, token);
+            if (aboutOpen) {
+                sendScreen(aboutPixels, token);
                 return;
             }
             if (activeMode == Mode.MIXER) {
@@ -624,7 +650,7 @@ public final class RemoteSession {
             }
             var fields = new ArrayList<String>(RemotePage.SLOT_COUNT);
             Selection selection = switch (view) {
-                case CONTROLS, PARAMETER, LOOP -> null;
+                case CONTROLS, PARAMETER, RECORD_NOTICE, LOOP -> null;
                 case DEVICE -> new Selection(view, page.deviceName());
                 case TRACK -> new Selection(view, page.trackName());
             };
@@ -800,21 +826,21 @@ public final class RemoteSession {
         }
     }
 
-    private int lastScenePage() {
-        return Math.max(0, scenes.count() - 1) / SceneWindow.SIZE;
+    private int lastSceneOffset() {
+        return Math.max(0, scenes.count() - SceneWindow.SIZE);
     }
 
-    private void setScenePage(int requested) {
-        int next = Math.clamp(requested, 0, lastScenePage());
-        if (scenePage == next) return;
+    private void setFirstScene(int requested) {
+        int next = Math.clamp(requested, 0, lastSceneOffset());
+        if (firstScene == next) return;
         Arrays.fill(shownScenes, null);
-        scenePage = next;
-        scenes.scrollTo(next * SceneWindow.SIZE);
+        firstScene = next;
+        scenes.scrollTo(next);
     }
 
     private void flushLauncher(long token) {
-        setScenePage(scenePage);
-        int first = scenePage * SceneWindow.SIZE;
+        setFirstScene(firstScene);
+        int first = firstScene;
         String[] names = new String[SceneWindow.SIZE];
         var labels = new ArrayList<String>(SceneWindow.SIZE);
         for (int i = 0; i < names.length; i++) {
@@ -822,18 +848,21 @@ public final class RemoteSession {
             names[i] = index < scenes.count() ? scenes.name(index) : null;
             labels.add(names[i] == null ? "" : names[i].isBlank() ? "Scene " + (index + 1) : names[i]);
         }
-        String title = "Launcher " + (scenePage + 1) + "/" + (lastScenePage() + 1);
-        boolean overview = view != View.TRACK;
-        byte[] pixels = overview ? ControlScreen.renderScenes(title, labels)
-                : SelectionScreen.render("TRACK", page.trackName());
+        String title = scenes.count() == 0 ? "Scenes" : "Scenes " + (first + 1) + "-" + Math.min(first + SceneWindow.SIZE, scenes.count());
+        boolean overview = view == View.CONTROLS;
+        byte[] pixels = switch (view) {
+            case TRACK -> SelectionScreen.render("TRACK", page.trackName());
+            case RECORD_NOTICE -> SelectionScreen.render("RECORD", recordNotice);
+            default -> ControlScreen.renderScenes(title, labels);
+        };
         if (!isReady(token) || !sendScreen(pixels, token)) return;
         if (overview && !displayPending) System.arraycopy(names, 0, shownScenes, 0, names.length);
         for (int i = 0; i < MIXER_TRACK_BUTTONS; i++) {
-            boolean exists = i < names.length && names[i] != null;
+            boolean exists = i == 8 || (i < names.length && names[i] != null);
             if (!sendFeedbackRing(i, switchRing(exists, false, 0), token)) return;
         }
         if (!sendBottomRow(Mode.LAUNCHER, token)) return;
-        int progress = endpointProgress(new RemotePage.PagePosition(scenePage, lastScenePage() + 1));
+        int progress = endpointProgress(new RemotePage.PagePosition(firstScene, lastSceneOffset() + 1));
         if (sentPageProgress != progress) {
             sendNavigationRing(PAGE_RING_INDEX, progress);
             if (isReady(token)) sentPageProgress = progress;
@@ -927,7 +956,6 @@ public final class RemoteSession {
             case MIXER -> NAVIGATION_RING_ORANGE;
             case TRANSPORT -> 0x000e08;
             case LAUNCHER -> 0x020918;
-            case ABOUT -> 0x080808;
         };
         output.send(E16Protocol.ringPrefixed(MODE_RING_INDEX, colour >> 16, (colour >> 8) & 0xff,
                 colour & 0xff, 16383, false));
@@ -995,9 +1023,11 @@ public final class RemoteSession {
         sentTrackProgress = -1;
         trackButtonHeld = false;
         navigationTimerScheduled = false;
-        scenePage = 0;
+        firstScene = 0;
         Arrays.fill(shownScenes, null);
         welcome = false;
+        aboutOpen = false;
+        Arrays.fill(consumedPress, false);
         mode = Mode.DEVICE;
         shiftHeld = false;
         pendingTrackOrigin = null;

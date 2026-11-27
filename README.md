@@ -2,20 +2,22 @@
 
 OxiWiggle by **wintoid** turns the OXI E16 into a control surface for Bitwig Studio. Select a device in Bitwig and its Remote Controls appear on the E16, with names on the OLED and values on the LED rings. Turn a knob to edit the parameter, or move it in Bitwig and watch the ring follow.
 
-You can also mix four tracks side by side, control the Arranger and launch scenes in banks of eight. OxiWiggle runs inside Bitwig as a Java controller extension and uses the E16’s built-in Remote Mode. All installation happens on the computer.
+You can also mix four tracks side by side, control the Arranger and launch scenes and record clips. OxiWiggle runs inside Bitwig as a Java controller extension and uses the E16’s built-in Remote Mode. All installation happens on the computer.
 
 ## Installation
 
-1. Connect the E16 over USB. If you’re starting from a clone of this repository, [build the extension](#build-from-source) to get `build/OxiWiggle.bwextension`.
+The release download is ready to use. You can skip the source build and JDK setup.
+
+1. Download [OxiWiggle.bwextension from the latest release](https://github.com/wintocode/OxiWiggle/releases/latest/download/OxiWiggle.bwextension) and connect the E16 over USB.
 2. Drag `OxiWiggle.bwextension` onto Bitwig Studio. On macOS you can also quit Bitwig, copy the file to `~/Documents/Bitwig Studio/Extensions/`, then reopen Bitwig.
 3. Open **Settings → Controllers**. On the tested macOS setup, connecting the E16 automatically added **OXI Instruments E16 (OxiWiggle)** and filled both port selectors. If the entry is missing, add **OxiWiggle** under **OXI Instruments**. On macOS, select **OXI E16 Port 1** for both MIDI input and MIDI output if the selectors are empty. Use just one controller integration for that pair.
 4. The E16 briefly shows **OxiWiggle by wintoid** and the version, then opens in Device mode. Select a device with a populated Remote Controls page and turn knob 1. Its first parameter should move in Bitwig.
 
-The hardware setup used during development was macOS, Bitwig Studio 6.1.7 and E16 firmware 1.3.1 (hardware V5). The extension requires Bitwig Controller API 25. The full Transport and Launcher mappings still await detailed hardware checks. [Hardware test notes](docs/hardware-tests/)
+The hardware setup used during development was macOS, Bitwig Studio 6.1.7 and E16 firmware 1.3.1 (hardware V5). The extension requires Bitwig Controller API 25. Hardware checks cover Transport playback, Launcher scene selection and Stop, nine-scene scrolling and Shift-click recording. [Hardware test notes](docs/hardware-tests/)
 
 ## Finding your way around
 
-The two rightmost knobs on the bottom row work the same way in every mode. **Turn 15 to select a track**, or press it to expand or collapse a selected group. **Turn 16 to select a mode**, clockwise through Device, Mixer, Transport, Launcher and About. Turn it fully left to return to Device or fully right to see the installed version.
+The two rightmost knobs on the bottom row work the same way in every mode. **Turn 15 to select a track**, or press it to expand or collapse a selected group. **Turn 16 to select a mode**, clockwise through Device, Mixer, Transport and Launcher. Press **16** in any mode to show About and the installed version. Press any knob (or Shift) to close it and return to the same mode. The closing press only dismisses About.
 
 ### Device
 
@@ -35,6 +37,8 @@ Each physical column controls the track named above it on the OLED. For example,
 
 ### Transport
 
+The OLED shows the playhead position in bars, beats, subdivisions and ticks, for example `1.4.4.03`. During playback the position refreshes up to ten times per second.
+
 | Knob | Turn | Press | With Shift |
 | --- | --- | --- | --- |
 | 1–4 | | Play, stop, Arranger record, restart (in order) | |
@@ -49,7 +53,11 @@ Each physical column controls the track named above it on the OLED. For example,
 
 ### Launcher
 
-Press **1–8** to launch the scene in the matching OLED slot. Turn **13** to page through banks of eight. To launch scene 9 from the first bank, turn 13 one step clockwise, then press 1. Paging alone leaves playback running.
+Press **1–8** to launch the scene in the matching OLED slot. Press **9** to stop Bitwig playback. Turn **13** to scroll one scene. Hold **Shift** and turn **13** to jump eight. From scenes 1–8, one clockwise step shows scenes 2–9. With nine scenes, scrolling stops at 2–9 in either step size. Scrolling leaves playback running.
+
+Hold **Shift** and press **1–8** to record into that scene’s empty slots on armed tracks. Occupied slots are skipped. The OLED reports when there are no armed tracks or available slots. This build supports Launcher recording in projects with up to 128 main tracks, including tracks inside groups.
+
+**Known issue:** When one armed track already has a clip in the scene and another has an empty slot, the E16 can report `No empty armed slots`. Check the clip slot in Bitwig to confirm whether recording started.
 
 ## Build from source
 

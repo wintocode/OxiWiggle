@@ -10,20 +10,24 @@ import java.util.Locale;
 public final class BitwigTransport implements TransportControls {
     private final Transport transport;
     private final BeatTimeFormatter barBeat;
-    private String lastDisplayedPosition;
+    private final BeatTimeFormatter fullPosition;
+    private static final long POSITION_INTERVAL_NANOS = 100_000_000L;
+    private long lastPlaybackUpdate = System.nanoTime() - POSITION_INTERVAL_NANOS;
 
     public BitwigTransport(ControllerHost host) {
         transport = host.createTransport();
+        fullPosition = host.createBeatTimeFormatter(".", 1, 1, 1, 2);
         barBeat = host.createBeatTimeFormatter(".", 1, 1, 0, 0);
     }
 
     public void observe(Runnable changed) {
         transport.playPosition().addValueObserver(ignored -> {
-            String position = transport.playPosition().getFormatted(barBeat);
-            if (!position.equals(lastDisplayedPosition)) {
-                lastDisplayedPosition = position;
-                changed.run();
+            if (transport.isPlaying().get()) {
+                long now = System.nanoTime();
+                if (now - lastPlaybackUpdate < POSITION_INTERVAL_NANOS) return;
+                lastPlaybackUpdate = now;
             }
+            changed.run();
         });
         transport.arrangerLoopStart().addValueObserver(ignored -> changed.run());
         transport.arrangerLoopDuration().addValueObserver(ignored -> changed.run());
@@ -43,7 +47,7 @@ public final class BitwigTransport implements TransportControls {
     @Override public Snapshot read() {
         String tempo = transport.tempo().value().displayedValue().get().strip();
         if (!tempo.isEmpty() && !tempo.toUpperCase(Locale.ROOT).endsWith("BPM")) tempo += " BPM";
-        return new Snapshot(transport.playPosition().getFormatted(barBeat), tempo,
+        return new Snapshot(transport.playPosition().getFormatted(fullPosition), tempo,
                 transport.arrangerLoopStart().getFormatted(barBeat),
                 transport.arrangerLoopDuration().getFormatted(barBeat),
                 transport.isPlaying().get(), transport.isArrangerRecordEnabled().get(),

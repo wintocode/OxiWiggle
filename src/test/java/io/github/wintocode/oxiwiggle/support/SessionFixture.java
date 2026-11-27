@@ -56,6 +56,7 @@ public final class SessionFixture {
     public final List<Double> sendDeltas = new ArrayList<>();
     public final List<String> mixerEdits = new ArrayList<>();
     public final List<String> modeRings = new ArrayList<>();
+    public final List<Integer> recorded = new ArrayList<>();
     public int sceneCount = 11;
     public final List<Integer> launched = new ArrayList<>();
     public final List<String> transportActions = new ArrayList<>();
@@ -148,13 +149,14 @@ public final class SessionFixture {
                 public int count() { return sceneCount; }
                 public void scrollTo(int first) {}
                 public String name(int index) { return "Scene " + (index + 1); }
+                public String record(int index) { recorded.add(index); return ""; }
                 public void launch(int index) { launched.add(index); }
             }, "test-version");
 
     public void acknowledgeAndDismissWelcome(String ack) {
         session.onSysex(ack);
-        session.onMidi(0x90, 15, 127);
-        session.onMidi(0x80, 15, 0);
+        session.onMidi(0x90, 13, 127);
+        session.onMidi(0x80, 13, 0);
     }
 
     public void selectTrack(int index) {

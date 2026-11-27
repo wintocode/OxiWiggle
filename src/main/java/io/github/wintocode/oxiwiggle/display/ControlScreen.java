@@ -20,7 +20,13 @@ public final class ControlScreen {
     private static byte[] render(String title, List<String> labels, boolean controls) {
         if (labels.size() != 8) throw new IllegalArgumentException("eight control labels required");
         byte[] pixels = new byte[128 * 64 / 8];
-        PixelText.draw(pixels, title, 2, 1, PageText.OLED_TITLE_LENGTH);
+        if (controls) {
+            PixelText.draw(pixels, title, 2, 1, PageText.OLED_TITLE_LENGTH);
+        } else {
+            String heading = title.length() <= 14 ? title : title.replaceFirst("^Scenes ", "");
+            PixelText.draw(pixels, heading, 2, 1, 14);
+            PixelText.draw(pixels, "9 Stop", 90, 1, 6);
+        }
         for (int x = 2; x < 126; x++) PixelText.set(pixels, x, 10);
 
         for (int slot = 0; slot < labels.size(); slot++) {

@@ -107,14 +107,22 @@ public final class RemoteSessionTest {
         String launcher = assertSelectionScreen(f);
         f.session.onMidi(0xb0, 16, 1);
         f.session.onMidi(0xb0, 16, 1);
-        f.session.onMidi(0xb0, 1, 1);
+        f.session.flush();
+        Checks.that(launcher.equals(assertSelectionScreen(f)), "Launcher is the clockwise endpoint");
+        f.session.onMidi(0x90, 15, 127);
+        f.session.onMidi(0x90, 15, 127);
+        f.session.onMidi(0x80, 15, 0);
+        f.session.onMidi(0xb0, 16, 127);
         f.advanceTo(5000);
         f.session.flush();
-        Checks.that(welcome.equals(assertSelectionScreen(f)), "About stays at clockwise endpoint");
+        Checks.that(welcome.equals(assertSelectionScreen(f)), "About stays open through turns");
         Checks.equal(1, f.increments.size());
-        f.session.onMidi(0xb0, 16, 127);
+        f.session.onMidi(0x90, 0, 127);
+        f.session.onMidi(0x90, 0, 127);
+        f.session.onMidi(0x80, 0, 0);
+        Checks.that(f.launched.isEmpty(), "closing About consumes the scene click");
         f.session.flush();
-        Checks.that(launcher.equals(assertSelectionScreen(f)), "one reverse step returns to Launcher");
+        Checks.that(launcher.equals(assertSelectionScreen(f)), "dismissal returns to Launcher");
 
         var restarted = new SessionFixture();
         restarted.session.start();
@@ -151,7 +159,12 @@ public final class RemoteSessionTest {
         Checks.that(!f.modeRings.getLast().equals(deviceRing), "mode indicator follows the active mode");
         f.session.onMidi(0x90, 15, 127);
         f.session.flush();
-        Checks.that(assertSelectionScreen(f).equals(mixer), "click preserves Mixer");
+        Checks.that(assertSelectionScreen(f).equals(screenHex(AboutScreen.render("test-version"))), "click opens About in Mixer");
+        f.session.onMidi(0x80, 15, 0);
+        f.session.onMidi(0x90, 15, 127);
+        f.session.onMidi(0x80, 15, 0);
+        f.session.flush();
+        Checks.that(assertSelectionScreen(f).equals(mixer), "second mode click restores Mixer");
 
         f.session.onMidi(0xb0, 1, 1);
         f.session.onMidi(0xb0, 15, 1);
