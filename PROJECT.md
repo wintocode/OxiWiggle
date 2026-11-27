@@ -4,9 +4,11 @@
 
 ## Overview
 
-OxiWiggle is a proposed native **Bitwig Studio controller extension** for the **OXI E16**. It aims to turn the E16 into a context-sensitive, bidirectional Bitwig control surface, using the E16's host-driven **Remote Mode** rather than an E16-side Lua script or custom preset.
+OxiWiggle is a native Bitwig Studio controller extension for the OXI E16. The public release is one installable `.bwextension` that uses the E16’s built-in Remote Mode. The [README](README.md) covers installation and the current controls.
 
-**Distribution goal:** one installable `.bwextension` file. Users should not have to install a Lua script, import a scene, or run a separate background application. This is a design goal **subject to hardware verification**, not an already-proven guarantee.
+The 0.0.58 release includes Device, Mixer, Transport and Launcher, a welcome screen and a versioned About screen. In Launcher, Shift-press queues empty slots on armed tracks and starts playback from stopped. Hardware checks confirmed that existing clips survive and that an all-disarmed project stays stopped. [Launcher hardware record](docs/hardware-tests/launcher.md)
+
+The dated milestones, plans and design specs describe the builds they were written for. Their mappings, local checkpoint paths and proposed experiments can differ from the public release.
 
 ## Core user experience
 
@@ -88,7 +90,9 @@ M1 verified native four-character labels. The current extension renders the OLED
 8. **Graceful absence:** missing device, empty track, empty page, unassigned slot, or disconnected E16 should not crash the extension.
 9. **Maintainability:** separate protocol encoding/decoding, Bitwig bindings, navigation, display presentation, and lifecycle management.
 
-## Open questions to resolve experimentally
+## Original research questions
+
+Setup, handshake and reconnect results are recorded in the [macOS setup checks](docs/hardware-tests/controller-setup.md) and [M1 record](docs/hardware-tests/m1.md). The following list preserves the original research scope.
 
 - Does the E16 enter Remote Mode immediately from its normal power-on state without any device-side setup?
 - Which global settings, if any, affect Remote Mode input? On 2026-11-23 the user confirmed that Remote Mode worked after changing normal scene knob/button assignments and preserved those assignments on exit, supporting independence from the tested mappings. The full range of channel/output/acceleration settings, scene values and unsaved edits has not been separately enumerated or verified. See [the M1 hardware record](docs/hardware-tests/m1.md).
@@ -152,18 +156,13 @@ Test disconnections, reopen, project reload, automation, simultaneous control fr
 - Simon accepted the fixed encoder response after hardware testing 0.0.38 and dropped the proposed faster-tier preferences.
 - For a Remote Control that Bitwig identifies as having a fixed set of choices, keep the existing rule of one adjacent choice per turn message, stopping at each end. With four positions, a clockwise message from position 2 selects position 3 at any speed. Several successive messages can move through several choices. A plug-in that reports a continuous range gives the extension no reliable choice count. [M2 design](docs/superpowers/specs/2026-11-23-m2-one-remote-control-design.md)
 
-The archived probe measured numeric readback on Tool Gain and Serum 2 Main Vol. The next test evaluates the physical transition from the fine step to faster movement. [Measurement and hardware test record](docs/hardware-tests/encoder-tuning.md)
+The archived probe measured numeric readback on Tool Gain and Serum 2 Main Vol. Simon tried the later slow-medium curve and chose to use it for a while before considering further changes. [Measurement and hardware test record](docs/hardware-tests/encoder-tuning.md)
 
 The [encoder tuning design](docs/superpowers/specs/2026-11-24-encoder-tuning-design.md) sets out the four tiers and the rule for stepped controls. The [implementation plan](docs/superpowers/plans/2026-11-24-encoder-tuning-implementation.md) covers the measurement build, shared response and accepted settings.
 
-Consider an opt-in “Show Remote Controls when navigating devices” checkbox in Bitwig’s Controller Preferences. API 25 exposes both a writable Remote Controls visibility flag and a separate device expansion flag. Try setting visibility alone after a confirmed move from knob 14, and verify how collapsed devices behave. Keep the default off and apply the action only on a successful controller-driven move so users can still fold panels manually.
+The proposed preference to show Remote Controls when changing devices was left out of the released build. The E16 guide offered no documented way to supply custom screensaver artwork, so branding appears on the welcome and About screens.
 
-First-run setup follow-ups:
-
-- The extension declares one MIDI input and one output. The initial setup used manual assignment of `OXI E16 Port 1` in both directions on macOS. The 0.0.49-port-pair candidate advertises that observed macOS pair. Verify whether Bitwig fills both selectors on a fresh install, including with Bitwig's built-in E16 integration available. Confirm endpoint names on other platforms and with E16 USB Multi Port disabled before adding those names.
-- Simon reported that the add-controller picker offers **OxiWiggle** under OXI, but the resulting Controllers entry resembles **OXI Instruments E16**, with no visible OxiWiggle name. The definition supplies `OxiWiggle` as its extension name and `OXI Instruments` / `E16` as its hardware vendor and model. Verify which fields Bitwig uses for each view and whether users can distinguish the two E16 integrations without changing hardware identification.
-
-The [controller setup design](docs/superpowers/specs/2026-11-24-controller-setup-design.md) and [implementation plan](docs/superpowers/plans/2026-11-24-controller-setup-implementation.md) cover the configured name, the Remote Controls preference and macOS Port 1 detection as three testable checkpoints.
+On the tested Mac, Bitwig showed **OXI Instruments E16 (OxiWiggle)**, automatically added the controller on connection, and selected **OXI E16 Port 1** for both directions. USB reconnect restored control and feedback. Endpoint names on other platforms remain unverified. [Controller setup record](docs/hardware-tests/controller-setup.md)
 
 ## Out of scope for the initial release
 
@@ -174,7 +173,7 @@ The [controller setup design](docs/superpowers/specs/2026-11-24-controller-setup
 
 ## Project naming
 
-Use **OxiWiggle** exactly in user-facing text and the Bitwig extension display name. Suggested repository slug: `oxiwiggle`. The user confirmed GitHub owner `wintocode`; use Java package `io.github.wintocode.oxiwiggle`.
+Use **OxiWiggle** exactly in user-facing text and the Bitwig extension display name. The public repository is [wintocode/OxiWiggle](https://github.com/wintocode/OxiWiggle). The user confirmed GitHub owner `wintocode`; use Java package `io.github.wintocode.oxiwiggle`.
 
 ## Project decisions recorded 2026-11-22
 

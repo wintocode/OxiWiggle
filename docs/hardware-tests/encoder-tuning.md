@@ -140,3 +140,5 @@ After reloading, check the version on About. Sweep the same continuous Device co
 Treat relative magnitudes 2 and 3 as the likely slow-medium region. The actual codes at Simon’s turning speed have not been measured. Increase their continuous movement from 2 to 3.5 and from 5.5 to 7 units of 1/256 per message. The fine step and magnitudes 4–8 keep the previous values.
 
 Reload Bitwig, confirm 0.0.47-slow-medium on About, and sweep the same continuous parameter just above fine speed in both directions. Check how easily it starts moving and how precisely you can land as you slow down. The archived 0.0.46-medium-turns build is the comparison point.
+
+Simon tried the slow-medium response and chose to keep using it. He noted that accelerating partway through a slow sweep can still require a second grip to reach maximum.

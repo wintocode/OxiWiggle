@@ -9,3 +9,5 @@ The 0.0.49-port-pair candidate registers `OXI E16 Port 1` as both its input and 
 **Reconnect check passed on 0.0.49-port-pair.** With Bitwig open, Simon unplugged and reconnected the E16. The OxiWiggle screen returned automatically. In Device mode, knob 1 moved the mapped Remote Control in Bitwig, and editing that control with the mouse updated the E16 ring.
 
 The 0.0.48-name checkpoint can be reinstalled to repeat the comparison.
+
+**About check passed on 0.0.56-about-click.** From Launcher with playback stopped, pressing 16 displayed the credit and version. Pressing a scene knob closed About and playback stayed stopped. A second press launched the scene.

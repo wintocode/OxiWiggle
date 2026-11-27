@@ -23,9 +23,9 @@ With Shift held, Simon toggled each punch switch on and off in Bitwig with the m
 | 12 | | Arranger automation write | Click for punch out |
 | 13–14 | Spare in Transport and Mixer, page and device in Device | | |
 | 15 | Select track | Expand or collapse group | |
-| 16 | Select mode | | |
+| 16 | Select mode | Open About (since 0.0.56) | |
 
-## Install and check
+## Original 0.0.43 install and check
 
 1. Run `sh scripts/build.sh`. To test the archived candidate on macOS, quit Bitwig, copy `build/checkpoints/OxiWiggle-0.0.43-transport.bwextension` to `~/Documents/Bitwig Studio/Extensions/OxiWiggle.bwextension`, and reopen Bitwig. Select the E16 Port 1 input and output.
 2. In a test project with a group, multiple devices and Remote Controls pages, turn 13 and 14 in Device and check the page and device shown in Bitwig. Turn 16 through Device, Mixer and Transport in each direction and past each end. Check track selection with 15 and group expansion with its click in each mode. Return to Mixer and verify the first knob edits the displayed track.
