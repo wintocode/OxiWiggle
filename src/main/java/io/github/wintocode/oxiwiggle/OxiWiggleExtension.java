@@ -22,8 +22,9 @@ public final class OxiWiggleExtension extends ControllerExtension {
         var track = host.createCursorTrack(0, 0);
         var page = new BitwigRemotePage(host, track);
         var mixer = new BitwigMixerBank(host);
-        var scenes = new BitwigScenes(host);
-        var transport = new BitwigTransport(host);
+        var hostTransport = host.createTransport();
+        var scenes = new BitwigScenes(host, hostTransport);
+        var transport = new BitwigTransport(host, hostTransport);
         var activeSession = new RemoteSession(frame -> {
             E16Protocol.validateFrame(frame);
             midiOut.sendSysex(frame);

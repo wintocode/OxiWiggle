@@ -2,6 +2,7 @@ package io.github.wintocode.oxiwiggle.bitwig;
 
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.ClipLauncherSlot;
+import com.bitwig.extension.controller.api.Transport;
 import java.util.ArrayList;
 import com.bitwig.extension.controller.api.TrackBank;
 import com.bitwig.extension.controller.api.TrackBankContentFilter;
@@ -12,12 +13,14 @@ import io.github.wintocode.oxiwiggle.surface.SceneWindow;
 public final class BitwigScenes implements SceneWindow {
     private final ControllerHost host;
     private final SceneBank bank;
+    private final Transport transport;
 
     private static final int RECORD_TRACKS = 128;
     private final TrackBank tracks;
     private int recordAttempt;
 
-    public BitwigScenes(ControllerHost host) {
+    public BitwigScenes(ControllerHost host, Transport transport) {
+        this.transport = transport;
         this.host = host;
         tracks = host.getProject().getRootTrackGroup().createMainTrackBank("launcher-record", "Launcher recording",
                 RECORD_TRACKS, 0, SIZE, TrackBankContentFilter.ALL_CHANNELS, false);
@@ -76,6 +79,7 @@ public final class BitwigScenes implements SceneWindow {
         if (count > RECORD_TRACKS) return report(attempt, "Recording limit: 128 tracks");
         var targets = new ArrayList<ClipLauncherSlot>();
         boolean armed = false;
+        boolean recordingQueued = false;
         for (int i = 0; i < count; i++) {
             var track = tracks.getItemAt(i);
             if (!track.exists().get()) return report(attempt, "Tracks updating");
@@ -91,15 +95,19 @@ public final class BitwigScenes implements SceneWindow {
             if (!trackArmed) continue;
             armed = true;
             if (!slot.exists().get() || slot.sceneIndex().get() != index) return report(attempt, "Scene updating");
+            recordingQueued |= queued;
             if (!content && !queued && !recording) {
                 targets.add(slot);
             }
         }
         if (!armed) return report(attempt, "No armed tracks");
-        if (targets.isEmpty()) return report(attempt, "No empty armed slots");
-        host.println(attempt + " calling record(), targets=" + targets.size());
-        for (var slot : targets) slot.record();
-        return report(attempt, "Record requested");
+        if (targets.isEmpty() && !recordingQueued) return report(attempt, "No empty armed slots");
+        if (!targets.isEmpty()) {
+            host.println(attempt + " calling record(), targets=" + targets.size());
+            for (var slot : targets) slot.record();
+        }
+        if (!transport.isPlaying().get()) transport.play();
+        return report(attempt, targets.isEmpty() ? "Recording queued" : "Record requested");
     }
 
     private String report(String attempt, String result) {

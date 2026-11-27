@@ -25,11 +25,32 @@ public final class BitwigScenesTest {
         });
         Track root = stub(Track.class, (p, m, a) -> tracks);
         Project project = stub(Project.class, (p, m, a) -> root);
+        var playRequests = new ArrayList<List<Integer>>();
+        boolean[] playing = {false};
+        Transport transport = stub(Transport.class, (p, method, args) -> switch (method.getName()) {
+            case "isPlaying" -> stub(SettableBooleanValue.class, (v, m, a) -> playing[0]);
+            case "play" -> playRequests.add(List.copyOf(recorded));
+            default -> throw new AssertionError(method);
+        });
         ControllerHost host = stub(ControllerHost.class, (p, m, a) -> project);
-        var scenes = new BitwigScenes(host);
+        var scenes = new BitwigScenes(host, transport);
         Checks.that("Outro".equals(scenes.name(10)) && scenes.name(11) == null, "partial page names");
         Checks.that(scenes.record(8).equals("R1 Record requested") && recorded.equals(List.of(0, 3)), "record empty armed slots");
         Checks.that(scenes.record(11).equals("R2 Scene unavailable"), "missing scene");
+        Checks.that(scenes.record(8).equals("R3 Recording queued") && recorded.equals(List.of(0, 3)), "queued slots are reported once without re-recording");
+        recorded.remove(Integer.valueOf(3));
+        Checks.that(scenes.record(8).equals("R4 Record requested") && recorded.equals(List.of(0, 3)), "queued slot leaves another empty armed slot eligible");
+        Checks.that(!playRequests.isEmpty() && playRequests.get(0).equals(List.of(0, 3)), "queue both recordings before starting playback");
+        playing[0] = true;
+        int previous = playRequests.size();
+        recorded.clear();
+        scenes.record(8);
+        Checks.that(playRequests.size() == previous, "running playback continues");
+        playing[0] = false;
+        scenes.record(11);
+        Checks.that(playRequests.size() == previous, "missing scene leaves transport stopped");
+        scenes.record(8);
+        Checks.that(playRequests.size() == previous + 1, "start playback for a previously queued recording");
         scenes.launch(8);
         scenes.launch(10);
         scenes.launch(11);
@@ -40,7 +61,8 @@ public final class BitwigScenesTest {
         var slot = stub(ClipLauncherSlot.class, (proxy, method, args) -> switch (method.getName()) {
             case "exists" -> flag(true);
             case "hasContent" -> flag(track == 1);
-            case "isRecording", "isRecordingQueued" -> flag(false);
+            case "isRecording" -> flag(false);
+            case "isRecordingQueued" -> flag(recorded.contains(track));
             case "sceneIndex" -> stub(IntegerValue.class, (p, m, a) -> 8);
             case "record" -> recorded.add(track);
             default -> throw new AssertionError(method);

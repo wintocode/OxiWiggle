@@ -12,7 +12,7 @@ public final class OxiWiggleExtensionDefinition extends ControllerExtensionDefin
 
     @Override public String getName() { return "OxiWiggle"; }
     @Override public String getAuthor() { return "wintocode"; }
-    @Override public String getVersion() { return "0.0.56-about-click"; }
+    @Override public String getVersion() { return "0.0.58-record-play"; }
     @Override public UUID getId() { return ID; }
     @Override public String getHardwareVendor() { return "OXI Instruments"; }
     @Override public String getHardwareModel() { return "E16 (OxiWiggle)"; }

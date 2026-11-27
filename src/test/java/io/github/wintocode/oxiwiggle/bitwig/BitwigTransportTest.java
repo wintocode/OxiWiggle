@@ -30,7 +30,8 @@ public final class BitwigTransportTest {
 
     public static void run() {
         var test = new BitwigTransportTest();
-        var controls = new BitwigTransport((ControllerHost) test.api(ControllerHost.class, ""));
+        var host = (ControllerHost) test.api(ControllerHost.class, "");
+        var controls = new BitwigTransport(host, host.createTransport());
         verifyPlaybackAndTempo(test, controls);
         controls.turn(5, 8, false);
         controls.turn(5, -1, true);

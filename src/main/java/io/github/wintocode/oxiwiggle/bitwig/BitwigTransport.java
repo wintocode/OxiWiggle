@@ -14,8 +14,8 @@ public final class BitwigTransport implements TransportControls {
     private static final long POSITION_INTERVAL_NANOS = 100_000_000L;
     private long lastPlaybackUpdate = System.nanoTime() - POSITION_INTERVAL_NANOS;
 
-    public BitwigTransport(ControllerHost host) {
-        transport = host.createTransport();
+    public BitwigTransport(ControllerHost host, Transport transport) {
+        this.transport = transport;
         fullPosition = host.createBeatTimeFormatter(".", 1, 1, 1, 2);
         barBeat = host.createBeatTimeFormatter(".", 1, 1, 0, 0);
     }

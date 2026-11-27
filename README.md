@@ -55,9 +55,9 @@ The OLED shows the playhead position in bars, beats, subdivisions and ticks, for
 
 Press **1–8** to launch the scene in the matching OLED slot. Press **9** to stop Bitwig playback. Turn **13** to scroll one scene. Hold **Shift** and turn **13** to jump eight. From scenes 1–8, one clockwise step shows scenes 2–9. With nine scenes, scrolling stops at 2–9 in either step size. Scrolling leaves playback running.
 
-Hold **Shift** and press **1–8** to record into that scene’s empty slots on armed tracks. Occupied slots are skipped. The OLED reports when there are no armed tracks or available slots. This build supports Launcher recording in projects with up to 128 main tracks, including tracks inside groups.
+Hold **Shift** and press **1–8** to record into that scene’s empty slots on armed tracks. Occupied slots are skipped. Shift-press also starts playback from stopped when it queues a recording or finds one already queued on an armed track in that scene. The OLED reports when there are no armed tracks or available slots. This build supports Launcher recording in projects with up to 128 main tracks, including tracks inside groups.
 
-**Known issue:** When one armed track already has a clip in the scene and another has an empty slot, the E16 can report `No empty armed slots`. Check the clip slot in Bitwig to confirm whether recording started.
+For example, if two tracks are armed and only one has an empty slot in Scene 2, Shift-press Scene 2 to record into that slot and keep the other track’s clip intact. This was verified on hardware with 0.0.58.
 
 ## Build from source
 

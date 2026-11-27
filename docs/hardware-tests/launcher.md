@@ -6,13 +6,17 @@ On 0.0.51, Simon confirmed that turning knob 13 one step clockwise placed scene 
 
 ## Scrolling and recording checks
 
-On 0.0.52, Simon observed that a nine-scene project scrolled past 2–9 through progressively shorter windows ending at 9–9. On 0.0.53, Simon confirmed that clockwise scrolling stopped at 2–9 in the same project. He also confirmed that Shift-click recorded into scene 2. Multi-track timing, occupied-slot handling and the OLED notices remain open hardware checks.
+On 0.0.52, Simon observed that a nine-scene project scrolled past 2–9 through progressively shorter windows ending at 9–9. On 0.0.53, Simon confirmed that clockwise scrolling stopped at 2–9 in the same project. He also confirmed that Shift-click recorded into scene 2. Multi-track timing, occupied-slot handling and the OLED notices were still open hardware checks at that point.
 
 In the mixed occupied/empty slot check on 0.0.53, Simon reported the OLED message `No empty armed slots`. Simon’s screenshot showed both Inst 1 and Inst 2 armed, with clip S2 on Inst 1 and an empty slot on Inst 2 in Scene 2. On 0.0.54 the trace for Scene 2 reported both tracks armed, Inst 1 occupied, and Inst 2 empty with neither queued nor active recording. Simon still saw the empty-slot warning. The 0.0.55 diagnostic pairs each request and its OLED result with a numbered identifier. The 0.0.54-record-probe candidate logs those readings on Shift-click.
 
 1. From scenes 1–8 turn 13 once and check for scenes 2–9. In a nine-scene project, continue clockwise and verify the window stays at 2–9. Shift-turn back and forth and verify the same two endpoints. Knob 8 in the final window should launch scene 9.
 2. Arm two tracks with empty slots in the same scene. Shift-press its knob and check both clips start together on Bitwig’s launch boundary. Repeat with one slot occupied and confirm its clip survives.
 3. Try an entirely occupied armed row and then disarm all tracks. Check each OLED notice and the return to the scene list.
+
+On 0.0.56, attempts R3–R6 on Scene 2 showed Inst 1 armed, empty and queued, and Audio 2 empty and unarmed. Each press reported `No empty armed slots`. Pressing Play in Bitwig produced a clip. The trace begins after queuing and does not establish what queued Inst 1. On 0.0.57 a repeated press with only queued targets should report `Recording queued`.
+
+Simon confirmed on 0.0.57 that a repeated press showed the queued notice and pressing Play produced the clip. On 0.0.58-record-play, Simon confirmed that from stopped, a single Shift-press started playback and recorded a clip in the armed track’s empty slot. Simon also repeated the test with two armed tracks in the same scene. The empty slot recorded and the existing clip stayed intact. With playback stopped and all tracks disarmed, Simon confirmed that Shift-press showed `No armed tracks` and Bitwig stayed stopped.
 
 ## Original bank-navigation trial (0.0.44)
 
